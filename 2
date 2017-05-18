@@ -1,0 +1,34 @@
+From 69c791342876671439782a435df43c044ab6c31d Mon Sep 17 00:00:00 2001
+From: Jeff Vander Stoep <jeffv@google.com>
+Date: Wed, 29 Jul 2015 21:10:11 -0700
+Subject: [PATCH] Revert "SELinux: use deletion-safe iterator to free list"
+
+This reverts commit e623b152f30f6f1204919315df37244d69e5d55e.
+
+Bug: 22846070
+Change-Id: Ief7a906b613adcf316e734270a1da2fbd1ce6cb8
+Signed-off-by: Jeff Vander Stoep <jeffv@google.com>
+---
+
+diff --git a/security/selinux/avc.c b/security/selinux/avc.c
+index 21a3415..76766f4 100644
+--- a/security/selinux/avc.c
++++ b/security/selinux/avc.c
+@@ -298,15 +298,13 @@
+ 
+ static void avc_operation_free(struct avc_operation_node *ops_node)
+ {
+-	struct avc_operation_decision_node *od_node, *tmp;
++	struct avc_operation_decision_node *od_node;
+ 
+ 	if (!ops_node)
+ 		return;
+ 
+-	list_for_each_entry_safe(od_node, tmp, &ops_node->od_head, od_list) {
+-		list_del(&od_node->od_list);
++	list_for_each_entry(od_node, &ops_node->od_head, od_list)
+ 		avc_operation_decision_free(od_node);
+-	}
+ 	kmem_cache_free(avc_operation_node_cachep, ops_node);
+ }
+ 
